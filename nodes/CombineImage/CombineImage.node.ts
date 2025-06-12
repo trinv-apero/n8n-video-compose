@@ -8,38 +8,35 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 import { v4 as uuidv4 } from 'uuid';
-import { makeOutputDirPath } from './lib';
-import { RabbitMQClient } from './rabbitmq';
-import { JsonAIMessageHandler, JsonRpcMessageHandler } from './utils/message-handler';
-import os from 'os';
-import { JsonAIResponse } from './types/jsonai';
-import { image2imageEmitter } from './events/eventEmitter';
+import { makeOutputDirPath } from '../../utils/helper';
+import { RabbitMQClient } from '../../services/rabbitmq';
+import { JsonAIMessageHandler, JsonRpcMessageHandler } from '../../utils/message-handler';
+import { JsonAIResponse } from '../../types/jsonai';
+import { image2imageEmitter } from '../../events/eventEmitter';
+import { GLOBAL_CONFIG } from '../../config';
 
 const rabbitMQClient = RabbitMQClient.getInstance();
 rabbitMQClient.connect();
 
 const CONFIG = {
-	targetService: 'image2image',
-	targetFeature: 'image2image',
-	requestExchange: 'ai-request',
-	resultExchange: 'ai-result',
-	queueOneTime: 'workflow-' + os.hostname(),
+	targetService: 'ai-core-outpainting',
+	targetFeature: 'combineImages',
 	ttlMessage: 1000 * 60, // 1 min
 };
 
-export class Image2Image implements INodeType {
+export class CombineImage implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Image2Image',
-		name: 'image2image',
-		icon: 'file:image2image.svg',
+		displayName: 'CombineImage',
+		name: 'combineImage',
+		icon: 'file:combineImage.svg',
 		group: ['transform'],
 		version: 1,
 		defaults: {
-			name: 'Image2Image',
+			name: 'CombineImage',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
-		description: 'Image2Image',
+		description: 'CombineImage',
 		properties: [
 			{
 				displayName: 'File',
@@ -92,7 +89,7 @@ export class Image2Image implements INodeType {
 					prompt: item.prompt,
 				};
 
-				await rabbitMQClient.consumeQueue(CONFIG.queueOneTime, async (message) => {
+				await rabbitMQClient.consumeQueue(GLOBAL_CONFIG.queueOneTime, async (message) => {
 					if (message) {
 						const response = (await JsonAIMessageHandler.parseAndValidateMessage(
 							message.content as Buffer,
@@ -115,10 +112,10 @@ export class Image2Image implements INodeType {
 
 				const success = await rabbitMQClient.publish(
 					message,
-					CONFIG.requestExchange,
+					GLOBAL_CONFIG.requestExchange,
 					CONFIG.targetService,
 					{
-						replyTo: CONFIG.queueOneTime,
+						replyTo: GLOBAL_CONFIG.queueOneTime,
 						correlationId,
 					},
 				);
@@ -128,12 +125,12 @@ export class Image2Image implements INodeType {
 				}
 
 				const timeout = setTimeout(() => {
-					this.logger.error(`${Image2Image.name} timeout`);
-					reject(new Error(`${Image2Image.name} timeout`));
+					this.logger.error(`${CombineImage.name} timeout`);
+					reject(new Error(`${CombineImage.name} timeout`));
 				}, CONFIG.ttlMessage);
 
 				const handleResponse = (response: JsonAIResponse) => {
-					console.log(`${Image2Image.name} response received`, {
+					console.log(`${CombineImage.name} response received`, {
 						response,
 					});
 					if (response.errorMessage) {

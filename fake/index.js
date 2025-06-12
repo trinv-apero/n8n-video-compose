@@ -45,15 +45,15 @@ connect(
 				durable: false,
 			});
 
-			// Queue image
-			const queueImage = 'image2image';
-			channel.assertQueue(queueImage, {
+			// Queue outpainting
+			const queueOutpainting = 'ai-core-outpainting';
+			channel.assertQueue(queueOutpainting, {
 				durable: true,
 			});
 
-			channel.bindQueue(queueImage, exchangeRequest, queueImage);
+			channel.bindQueue(queueOutpainting, exchangeRequest, queueOutpainting);
 
-			channel.consume(queueImage, function reply(msg) {
+			channel.consume(queueOutpainting, function reply(msg) {
 				const strContent = zlib.gunzipSync(msg.content).toString('utf-8');
 				const jsonContent = JSON.parse(strContent);
 				log(' [x] Receive message: ', jsonContent);
@@ -72,6 +72,41 @@ connect(
 						correlationId: msg.properties.correlationId,
 					});
 				}, 500);
+
+				channel.ack(msg);
+			});
+
+			// Queue art premium
+			const queueArtPremium = 'ai-core-art-premium';
+			channel.assertQueue(queueArtPremium, {
+				durable: true,
+			});
+
+			channel.bindQueue(queueArtPremium, exchangeRequest, queueArtPremium);
+
+			channel.consume(queueArtPremium, function reply(msg) {
+				const strContent = zlib.gunzipSync(msg.content).toString('utf-8');
+				const jsonContent = JSON.parse(strContent);
+				log(' [x] Receive message: art premium', jsonContent);
+
+				// Simulate processing time with random delay between 30s and 1m
+				const minDelay = 5*1000; // 30 seconds
+				const maxDelay = 10 * 1000; // 1 minute
+				const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+				setTimeout(() => {
+					console.log('publish status preparing', msg.properties.replyTo);
+					const response = {
+						resultFile: [`image-premium/${msg.properties.correlationId}/0.jpg`],
+						messageType: 'success',
+						imageStatus: 'active',
+						statusCode: 200,
+					};
+					const content = zlib.gzipSync(JSON.stringify(response));
+					channel.publish(exchangeResult, msg.properties.replyTo, content, {
+						correlationId: msg.properties.correlationId,
+					});
+				}, randomDelay);
 
 				channel.ack(msg);
 			});
