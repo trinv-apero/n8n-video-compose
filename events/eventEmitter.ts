@@ -1,6 +1,6 @@
 import events from "events";
 
-class AgentEmitter extends events.EventEmitter {
+export class AgentEmitter extends events.EventEmitter {
   async emitAsync<T = any>(event: string, ...args: any[]): Promise<T> {
     return new Promise<T>((resolve) => {
       this.emit(event, ...args, resolve);

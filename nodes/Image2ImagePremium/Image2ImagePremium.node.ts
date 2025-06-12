@@ -12,7 +12,7 @@ import { makeOutputDirPath } from '../../utils/helper';
 import { RabbitMQClient } from '../../services/rabbitmq';
 import { JsonAIMessageHandler, JsonRpcMessageHandler } from '../../utils/message-handler';
 import { JsonAIResponse } from '../../types/jsonai';
-import { image2imageEmitter } from '../../events/eventEmitter';
+import { AgentEmitter } from '../../events/eventEmitter';
 import { GLOBAL_CONFIG } from '../../config';
 
 const rabbitMQClient = RabbitMQClient.getInstance();
@@ -154,6 +154,7 @@ export class Image2ImagePremium implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const processItem = (item: Image2ImagePremiumInput) => {
 			return new Promise(async (resolve, reject) => {
+				const image2imageEmitter = new AgentEmitter();
 				const correlationId = uuidv4();
 				const input = {
 					file: item.file,
@@ -222,7 +223,7 @@ export class Image2ImagePremium implements INodeType {
 					resolve(response?.resultFile?.[0] || '');
 				};
 
-				image2imageEmitter.once(correlationId, handleResponse);
+				image2imageEmitter.on(correlationId, handleResponse);
 			});
 		};
 

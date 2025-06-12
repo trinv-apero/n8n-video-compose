@@ -12,7 +12,7 @@ import { makeOutputDirPath } from '../../utils/helper';
 import { RabbitMQClient } from '../../services/rabbitmq';
 import { JsonAIMessageHandler, JsonRpcMessageHandler } from '../../utils/message-handler';
 import { JsonAIResponse } from '../../types/jsonai';
-import { videoLiteEmitter } from '../../events/eventEmitter';
+import { AgentEmitter } from '../../events/eventEmitter';
 import { GLOBAL_CONFIG } from '../../config';
 
 const rabbitMQClient = RabbitMQClient.getInstance();
@@ -75,7 +75,7 @@ export class VideoLite implements INodeType {
 		description: 'Video generation with lite features',
 		properties: [
 			{
-				displayName: 'Input Video File',
+				displayName: 'Image 01',
 				name: 'file',
 				type: 'string',
 				default: '',
@@ -83,7 +83,7 @@ export class VideoLite implements INodeType {
 				required: true,
 			},
 			{
-				displayName: 'Second Input File',
+				displayName: 'Image 02',
 				name: 'file2',
 				type: 'string',
 				default: '',
@@ -92,8 +92,42 @@ export class VideoLite implements INodeType {
 			{
 				displayName: 'Mode',
 				name: 'mode',
-				type: 'string',
-				default: 'transform',
+				type: 'options',
+				options: [
+					{
+						name: 'Fusion',
+						value: 'fusion',
+					},
+					{
+						name: 'Hugging',
+						value: 'hugging',
+					},
+					{
+						name: 'Image to Video',
+						value: 'i2v',
+					},
+					{
+						name: 'Image to Video Premium',
+						value: 'i2vp',
+					},
+					{
+						name: 'Kissing',
+						value: 'kissing',
+					},
+					{
+						name: 'Muscle',
+						value: 'muscle',
+					},
+					{
+						name: 'Passionate Kissing',
+						value: 'passionateKissing',
+					},
+					{
+						name: 'Text to GIF',
+						value: 't2g',
+					},
+				],
+				default: 'i2v',
 				description: 'The transformation mode',
 				required: true,
 			},
@@ -241,6 +275,7 @@ export class VideoLite implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const processItem = (item: VideoLiteRequest) => {
 			return new Promise(async (resolve, reject) => {
+				const videoLiteEmitter = new AgentEmitter();
 				const correlationId = uuidv4();
 				const videoId = uuidv4();
 
@@ -287,9 +322,9 @@ export class VideoLite implements INodeType {
 				}, CONFIG.ttlMessage);
 
 				const handleResponse = (response: JsonAIResponse) => {
-					// console.log(`${VideoLite.name} response received`, {
-					// 	response,
-					// });
+					console.log(`${VideoLite.name} response received`, {
+						response,
+					});
 
 					if (response.videoStatus === VideoStatus.COMPLETED) {
 						clearTimeout(timeout);

@@ -73,7 +73,7 @@ connect(
           channel.publish(exchangeResult, msg.properties.replyTo, content, {
             correlationId: msg.properties.correlationId,
           });
-        }, 3000);
+        }, 1000);
 
         setTimeout(() => {
           console.log("publish status rendering", msg.properties.replyTo);
@@ -87,7 +87,7 @@ connect(
           channel.publish(exchangeResult, msg.properties.replyTo, content, {
             correlationId: msg.properties.correlationId,
           });
-        }, 10000);
+        }, 2000);
 
         setTimeout(() => {
           console.log("publish status done", msg.properties.replyTo);
@@ -103,7 +103,7 @@ connect(
           channel.publish(exchangeResult, msg.properties.replyTo, content, {
             correlationId: msg.properties.correlationId,
           });
-        }, 25000);
+        }, 3000);
       });
 
       // Queue image

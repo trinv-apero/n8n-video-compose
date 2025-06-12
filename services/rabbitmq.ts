@@ -31,10 +31,10 @@ export class RabbitMQClient {
 
 	private async createConnection(): Promise<amqp.ChannelModel> {
 		return await amqp.connect({
-			hostname: 'localhost',
+			hostname: '66.42.43.42',
 			port: 5672,
-			username: 'guest',
-			password: 'guest',
+			username: 'aiServiceDev',
+			password: 'VeryStrongPassword123',
 			vhost: '/',
 			heartbeat: 60,
 		});
