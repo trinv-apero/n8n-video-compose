@@ -12,7 +12,7 @@ import { makeOutputDirPath } from '../../utils/helper';
 import { RabbitMQClient } from '../../services/rabbitmq';
 import { JsonAIMessageHandler, JsonRpcMessageHandler } from '../../utils/message-handler';
 import { JsonAIResponse } from '../../types/jsonai';
-import { image2imageEmitter } from '../../events/eventEmitter';
+import { combineImageEmitter } from '../../events/eventEmitter';
 import { GLOBAL_CONFIG } from '../../config';
 
 const rabbitMQClient = RabbitMQClient.getInstance();
@@ -95,7 +95,7 @@ export class CombineImage implements INodeType {
 							message.content as Buffer,
 						)) as JsonAIResponse;
 						const correlationId = message.properties.correlationId;
-						image2imageEmitter.emit(correlationId, response);
+						combineImageEmitter.emit(correlationId, response);
 					}
 				});
 
@@ -135,15 +135,17 @@ export class CombineImage implements INodeType {
 					});
 					if (response.errorMessage) {
 						reject(new Error(response.errorMessage));
-						image2imageEmitter.off(correlationId, handleResponse);
+						combineImageEmitter.off(correlationId, handleResponse);
 						return;
 					}
-					resolve(response?.resultFile?.[0] || '');
-					clearTimeout(timeout);
-					image2imageEmitter.off(correlationId, handleResponse);
+					if (response.resultFile) {
+						clearTimeout(timeout);
+						combineImageEmitter.off(correlationId, handleResponse);
+						resolve(response?.resultFile?.[0] || '');
+					}
 				};
 
-				image2imageEmitter.once(correlationId, handleResponse);
+				combineImageEmitter.once(correlationId, handleResponse);
 			});
 		};
 

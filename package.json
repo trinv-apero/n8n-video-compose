@@ -37,7 +37,8 @@
 		"nodes": [
 			"dist/nodes/ChatGPT/Chatgpt.node.js",
 			"dist/nodes/Image2ImagePremium/Image2ImagePremium.node.js",
-			"dist/nodes/CombineImage/CombineImage.node.js"
+			"dist/nodes/CombineImage/CombineImage.node.js",
+			"dist/nodes/VideoLite/VideoLite.node.js"
 		]
 	},
 	"devDependencies": {

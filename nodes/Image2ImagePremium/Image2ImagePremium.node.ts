@@ -21,7 +21,7 @@ rabbitMQClient.connect();
 const CONFIG = {
 	targetService: 'ai-core-art-premium', // routing key
 	targetFeature: 'image2image', // options
-	ttlMessage: 1000 * 60, // 1 min
+	ttlMessage: 1000 * 60 * 5, // 5 mins
 };
 
 type Image2ImagePremiumInput = {
@@ -44,7 +44,7 @@ export class Image2ImagePremium implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Image2ImagePremium',
 		name: 'image2imagePremium',
-		icon: 'file:icon.svg',
+		icon: 'file:image2image.svg',
 		group: ['transform'],
 		version: 1,
 		defaults: {
@@ -209,17 +209,17 @@ export class Image2ImagePremium implements INodeType {
 				}, CONFIG.ttlMessage);
 
 				const handleResponse = (response: JsonAIResponse) => {
-					console.log(`${Image2ImagePremium.name} response received`, {
-						response,
-					});
+					// console.log(`${Image2ImagePremium.name} response received`, {
+					// 	response,
+					// });
 					if (response.errorMessage) {
 						reject(new Error(response.errorMessage));
 						image2imageEmitter.off(correlationId, handleResponse);
 						return;
 					}
-					resolve(response?.resultFile?.[0] || '');
 					clearTimeout(timeout);
 					image2imageEmitter.off(correlationId, handleResponse);
+					resolve(response?.resultFile?.[0] || '');
 				};
 
 				image2imageEmitter.once(correlationId, handleResponse);
@@ -268,6 +268,8 @@ export class Image2ImagePremium implements INodeType {
 				},
 			});
 		}
+
+		console.log(Image2ImagePremium.name, 'Completed', returnData);
 
 		return [returnData];
 	}

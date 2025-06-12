@@ -11,3 +11,4 @@ class AgentEmitter extends events.EventEmitter {
 export const image2imageEmitter = new AgentEmitter();
 export const text2imageEmitter = new AgentEmitter();
 export const videoLiteEmitter = new AgentEmitter();
+export const combineImageEmitter = new AgentEmitter();
